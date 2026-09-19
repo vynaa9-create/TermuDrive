@@ -1,0 +1,3 @@
+import {recoverClaims} from './queue.js';import {db,now} from '../database/index.js';import {notify,history} from './notifications.js';import {Severity} from '../contracts.js';
+export function startupRecovery(){const recovered=recoverClaims();db().prepare(`UPDATE jobs SET state='QUEUED',updated_at=? WHERE state IN ('RUNNING','WAITING_NETWORK')`).run(now());db().prepare(`DELETE FROM idempotency_keys WHERE created_at < datetime('now','-7 days')`).run();history('RECOVERY_COMPLETED',null,'Startup recovery completed',{recovered});if(recovered)notify('RECOVERY_COMPLETED','Recovery completed',`${recovered} interrupted file(s) returned to the queue.`,Severity.INFO);return {recovered};}
+
